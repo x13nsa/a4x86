@@ -7,7 +7,7 @@
 .globl	is_xdigit
 
 .globl	is_alpha
-.globl	is_alnuM
+.globl	is_alnum
 .globl	is_space
 
 .globl	to_lower
@@ -20,7 +20,7 @@ is_lower:
 	cmpb	$'z', %dil
 	jg	.is_lower_end
 	movl	$1, %eax
-.is_lower_end
+.is_lower_end:
 	ret
 
 is_upper:
@@ -44,7 +44,20 @@ is_digit:
 	ret
 
 is_xdigit:
-	# TODO
+	call	is_digit
+	testl	%eax, %eax
+	jnz	.is_xdigit_yes
+	call	to_lower
+	cmpb	$'a', %al
+	jl	.is_xdigit_no
+	cmpb	$'f', %al
+	jle	.is_xdigit_yes
+.is_xdigit_no:
+	movl	$0, %eax
+	jmp	.is_xdigit_end
+.is_xdigit_yes:
+	movl	$1, %eax
+.is_xdigit_end:
 	ret
 
 is_alpha:
@@ -61,7 +74,7 @@ is_alpha:
 .is_alpha_end:
 	ret
 
-is_alnuM:
+is_alnum:
 	call	is_alpha
 	testl	%eax, %eax
 	jnz	.is_alnum_yes
@@ -70,7 +83,7 @@ is_alnuM:
 	jnz	.is_alnum_yes
 	movl	$0, %eax
 	jmp	.is_alnum_end
-.is_alnum_yes
+.is_alnum_yes:
 	movl	$1, %eax
 .is_alnum_end:
 	ret
@@ -97,16 +110,16 @@ to_lower:
 	jz	.to_lower_mov
 	subb	$32, %dil
 .to_lower_mov:
-	movl	%dil, %al
+	movb	%dil, %al
 .to_lower_end:
 	ret
 
 to_upper:	
 	call	is_lower
 	testl	%eax, %eax
-	jz	.to_uoper_mov
+	jz	.to_upper_mov
 	addb	$32, %dil
 .to_upper_mov:
-	movl	%dil, %al
+	movb	%dil, %al
 .to_upper_end:
 	ret
