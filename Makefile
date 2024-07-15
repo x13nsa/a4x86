@@ -1,4 +1,4 @@
-objs = types.o tester.o
+objs = types.o tester.o strlen.o
 exec = a4x86
 
 all: $(exec)
