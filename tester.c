@@ -32,10 +32,10 @@ static void test_types ()
 		if (is_alnum_(a)) alnum++;
 		if (is_alpha_(a)) alpha++;
 
-		if (is_lower_(a)) assert(to_upper_(a) == (a + 32));
+		if (is_lower_(a)) assert(to_upper_(a) == (a - 32));
 		else assert(to_upper_(a) == a);
 
-		if (is_upper_(a)) assert(to_lower_(a) == (a - 32));
+		if (is_upper_(a)) assert(to_lower_(a) == (a + 32));
 		else assert(to_lower_(a) == a);
 	}
 
@@ -43,7 +43,7 @@ static void test_types ()
 	assert(upper == 26);
 	assert(spaces == 6);
 	assert(digits == 10);
-	assert(xdigits == 16);
+	assert(xdigits == 22);
 	assert(alpha == lower + upper);
 	assert(alnum == lower + upper + digits);
 	puts("types: ok!");
@@ -61,9 +61,24 @@ static void test_strlen (void)
 	puts("strlen: ok!");
 }
 
+extern int strncmp_ (const char*, const char*, const size_t);
+
+static void test_strncmp (void)
+{
+	const char *a = "this is a test";
+
+	assert(strncmp_("hola", "hola", 4) == 1);
+	assert(strncmp_("will i see you again?", "will i see you again?", 10) == 1);
+	assert(strncmp_(a, "this is a Test", 11) == 0);
+	assert(strncmp_(a, a, strlen_(a)) == 1);
+
+	puts("strncmp: ok!");
+}
+
 int main (void)
 {
 	test_types();
 	test_strlen();
+	test_strncmp();
 	return 0;
 }
