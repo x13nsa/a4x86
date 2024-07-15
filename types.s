@@ -108,7 +108,7 @@ to_lower_:
 	call	is_upper_
 	testl	%eax, %eax
 	jz	.to_lower_mov
-	subb	$32, %dil
+	addb	$32, %dil
 .to_lower_mov:
 	movb	%dil, %al
 .to_lower_end:
@@ -118,7 +118,7 @@ to_upper_:
 	call	is_lower_
 	testl	%eax, %eax
 	jz	.to_upper_mov
-	addb	$32, %dil
+	subb	$32, %dil
 .to_upper_mov:
 	movb	%dil, %al
 .to_upper_end:
