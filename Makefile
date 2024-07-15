@@ -11,3 +11,4 @@ $(exec): $(objs)
 	cc	-c $@ $<
 clean:
 	rm	-rf $(objs) $(exec)
+
