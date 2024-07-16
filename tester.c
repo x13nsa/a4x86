@@ -71,7 +71,9 @@ static void test_strncmp (void)
 	assert(strncmp_("will i see you again?", "will i see you again?", 10) == 1);
 	assert(strncmp_(a, "this is a Test", 11) == 0);
 	assert(strncmp_(a, a, strlen_(a)) == 1);
-
+	assert(strncmp_("abc", "abcde", 5) == 0);
+	assert(strncmp_("abcde", "abc", 5) == 0);
+	assert(strncmp_("....", "..", 4) == 0);
 	puts("strncmp: ok!");
 }
 
