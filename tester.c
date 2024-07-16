@@ -77,10 +77,27 @@ static void test_strncmp (void)
 	puts("strncmp: ok!");
 }
 
+extern int memset_ (void*, const char, size_t);
+
+static void test_memset (void)
+{
+	const size_t n = 10;
+	char mem[n];
+
+	assert(memset_(NULL, 'a', n * n) == 0);
+	assert(memset_(mem, 0, n) == 1);
+	assert(memset_(mem, 'a', n - 1) == 1);
+	assert(strncmp_(mem, "aaaaaaaaa", n - 1) == 1);
+	assert(memset_(mem, 'b', 3) == 1);
+	assert(strncmp_(mem, "bbbaaaaaa", n - 1) == 1);
+	puts("memset: ok!");
+}
+
 int main (void)
 {
 	test_types();
 	test_strlen();
 	test_strncmp();
+	test_memset();
 	return 0;
 }
