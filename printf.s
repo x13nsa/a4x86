@@ -10,7 +10,8 @@
 	.err_overflow_len:	.long	23
 
 	.buffer_cap:	.quad	2048
-	.test:		.string "hola como estas subeme la %c%c%c%c radio\n"
+	.laradio:	.string "la radio!"
+	.test:		.string "hola como estas subeme %s %s %s %s\n"
 
 .section	.text
 .globl		printf_
@@ -31,13 +32,20 @@
 	syscall
 .endm
 
+.macro	CHECK_FOR_SPACE
+	movq	-36(%rbp), %rcx
+	cmpq	%rcx, .buffer_cap(%rip)
+	je	.printf_err_overflow
+.endm
+
 _start:
 	movl	$1, %edi
 	leaq	.test(%rip), %rsi
-	pushq	$'1'
-	pushq	$'2'
-	pushq	$'3'
-	pushq	$'4'
+	leaq	.laradio(%rip), %rax
+	pushq	%rax
+	pushq	%rsi
+	pushq	%rax
+	pushq	%rax
 	call	printf_
 	EXIT_	%rax
 
@@ -67,9 +75,7 @@ printf_:
 	testl	%edi, %edi
 	jz	.printf_goodbye
 	# cheking for space.
-	movq	-36(%rbp), %rcx
-	cmpq	%rcx, .buffer_cap(%rip)
-	je	.printf_err_overflow
+	CHECK_FOR_SPACE
 	# is it format?
 	cmpb	$'%', %dil
 	je	.printf_fmt_found
@@ -92,7 +98,7 @@ printf_:
 	# may this is not a format.
 	cmpb	$'%', %al
 	je	.printf_fmt_skip
-	# getting the valye for this format; stored into rbx.
+	# getting the value for this format; stored into rbx.
 	movq	-8(%rbp), %rbx
 	movq	16(%rbp, %rbx, 8), %rbx
 	incq	-8(%rbp)
@@ -108,6 +114,18 @@ printf_:
 .printf_fmt_number:
 
 .printf_fmt_string:
+	movzbl	(%rbx), %edi
+	testl	%edi, %edi
+	jz	.printf_fmt_done
+	CHECK_FOR_SPACE
+	# storing character from the string.
+	movq	-28(%rbp), %rax
+	movb	%dil, (%rax)
+	# keep going my bby.
+	incq	-28(%rbp)
+	incq	-36(%rbp)
+	incq	%rbx
+	jmp	.printf_fmt_string
 
 .printf_fmt_character:
 	movq	-28(%rbp), %rax
@@ -115,15 +133,18 @@ printf_:
 	incq	-28(%rbp)
 	incq	-36(%rbp)
 	jmp	.printf_fmt_done
+
 .printf_fmt_skip:
 	movq	-28(%rbp), %rax
 	movb	$'%', (%rax)
 	incq	-28(%rbp)
 	incq	-36(%rbp)
 	jmp	.printf_fmt_done
+
 .printf_fmt_done:
 	incq	-20(%rbp)
 	jmp	.printf_loop
+
 .printf_goodbye:
 	leaq	.buffer(%rip), %rsi
 	movq	-36(%rbp), %rdx
@@ -134,9 +155,18 @@ printf_:
 	leave
 	ret
 
+#  ___________________
+# < errors damnnnnnnn >
+#  -------------------
+#         \   ^__^
+#          \  (oo)\_______
+#             (__)\       )\/\
+#                 ||----w |
+#                 ||     ||
 .printf_err_unknown_fmt:
 	ERROR_	.err_unknw_fmt_msg(%rip), .err_unknw_fmt_len(%rip)
 	EXIT_	$1
+
 .printf_err_overflow:
 	ERROR_	.err_overflow_msg(%rip), .err_overflow_len(%rip)
 	EXIT_	$1
