@@ -1,8 +1,8 @@
 .section	.bss
 	.buffer:	.zero	2048
+	.numbuf:	.zero	32
 
 .section	.rodata
-	# error messages.
 	.err_unknw_fmt_msg:	.string "printf_: unknown fmt.\n"
 	.err_unknw_fmt_len:	.long	22
 
@@ -10,8 +10,10 @@
 	.err_overflow_len:	.long	23
 
 	.buffer_cap:	.quad	2048
+	.numbuf_cap:	.quad	32
+
 	.laradio:	.string "la radio!"
-	.test:		.string "hola como estas subeme %s %s %s %s\n"
+	.test:		.string "hola como estas %d subeme la radio\n"
 
 .section	.text
 .globl		printf_
@@ -41,11 +43,7 @@
 _start:
 	movl	$1, %edi
 	leaq	.test(%rip), %rsi
-	leaq	.laradio(%rip), %rax
-	pushq	%rax
-	pushq	%rsi
-	pushq	%rax
-	pushq	%rax
+	pushq	$12
 	call	printf_
 	EXIT_	%rax
 
@@ -112,6 +110,49 @@ printf_:
 	jmp	.printf_err_unknown_fmt
 
 .printf_fmt_number:
+	# rsi will act as a buffer to save
+	# the number, it will be saved in the
+	# reverse orden, for example:
+	# +-----------------------------------------------+
+	# +                                   <----- $  * + numbuf
+	# +------------------------------------------|--v-+
+	#                          start from here --+  nullbyte
+	# therefore 454 would look like:
+	# +-----------------------------------------------+
+	# +                                !  4  5  4  *  + numbuf
+	# +--------------------------------/--v-----------+
+	#                       not used...  rsi is here!!
+	leaq	.numbuf(%rip), %rsi
+	addq	.numbuf_cap(%rip), %rsi
+	decq	%rsi
+	# -*-
+	movq	%rbx, %rax
+	cmpq	$0, %rax
+	jge	.printf_fmt_num_get
+	movq	-28(%rbp), %rax
+	movb	$'-', (%rax)
+	incq	-36(%rbp)
+.printf_fmt_num_get:
+	testq	%rax, %rax
+	jz	.printf_fmt_num_end
+
+	movq	$10, %rbx
+	divq	%rbx
+	addq	$'0', %rdx	
+	movb	%dl, (%rsi)
+	decq	%rsi
+	jmp	.printf_fmt_num_get
+
+.printf_fmt_num_end:
+	#movq	$1, %rax
+	#movq	$1, %rdi
+	#leaq	.numbuf(%rip), %rsi
+	#movq	.numbuf_cap(%rip), %rdx
+	#syscall
+	EXIT_	$4
+
+	incq	%rsi
+	movq	%rsi, %rbx
 
 .printf_fmt_string:
 	movzbl	(%rbx), %edi
@@ -156,7 +197,7 @@ printf_:
 	ret
 
 #  ___________________
-# < errors damnnnnnnn >
+# < damnnnnnnn errors >
 #  -------------------
 #         \   ^__^
 #          \  (oo)\_______
