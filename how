@@ -1,3 +1,13 @@
 
+
 	#movq	-8(%rbp), %rax
 	#movq	16(%rbp, %rax, 8), %rax
+
+
+
+
+
+
+
+
+hola %c

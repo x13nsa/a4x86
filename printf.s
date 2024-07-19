@@ -1,3 +1,6 @@
+.section	.bss
+	.buffer:	.zero	2048
+
 .section	.rodata
 	# error messages.
 	.err_unknw_fmt_msg:	.string "printf_: unknown fmt.\n"
@@ -7,10 +10,7 @@
 	.err_overflow_len:	.long	23
 
 	.buffer_cap:	.quad	2048
-	.test:		.string "hola como estas\n"
-
-.section	.bss
-	.buffer:	.zero	2048
+	.test:		.string "hola como estas subeme la %% radio\n"
 
 .section	.text
 .globl		printf_
@@ -34,8 +34,7 @@
 _start:
 	movl	$1, %edi
 	leaq	.test(%rip), %rsi
-	pushq	$72
-	pushq	$4
+	pushq	$32
 	call	printf_
 	EXIT_	%rax
 
@@ -81,9 +80,11 @@ printf_:
 	incq	-28(%rbp)
 	incq	-36(%rbp)
 	jmp	.printf_loop
-
 .printf_fmt_found:
-	# get the next character to `%'
+	# getting the format.
+	# "this is the fmt (%c).\n"
+	#                    ` now here not at %.
+	incq	-20(%rbp)
 	movzbl	1(%rax), %eax
 	cmpb	$'d', %al
 	je	.printf_fmt_number
@@ -91,7 +92,6 @@ printf_:
 	je	.printf_fmt_string
 	cmpb	$'c', %al
 	je	.printf_fmt_character
-	je	.printf_fmt_string
 	cmpb	$'%', %al
 	je	.printf_fmt_skip
 	jmp	.printf_err_unknown_fmt
@@ -99,11 +99,19 @@ printf_:
 .printf_fmt_number:
 .printf_fmt_string:
 .printf_fmt_character:
+
 .printf_fmt_skip:
-	EXIT_	$-2
+	movq	-28(%rbp), %rax
+	movb	$'%', (%rax)
+	incq	-28(%rbp)
+	incq	-36(%rbp)
+	jmp	.printf_fmt_done
+.printf_fmt_done:
+	incq	-20(%rbp)
+	jmp	.printf_loop
 
 .printf_goodbye:
-	leaq	.buffer(%rip), %rdi
+	leaq	.buffer(%rip), %rsi
 	movq	-36(%rbp), %rdx
 	movq	$1, %rax
 	movq	$1, %rdi
