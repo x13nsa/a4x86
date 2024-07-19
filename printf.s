@@ -10,7 +10,7 @@
 	.err_overflow_len:	.long	23
 
 	.buffer_cap:	.quad	2048
-	.test:		.string "hola como estas subeme la %% radio\n"
+	.test:		.string "hola como estas subeme la %c%c%c%c radio\n"
 
 .section	.text
 .globl		printf_
@@ -34,14 +34,17 @@
 _start:
 	movl	$1, %edi
 	leaq	.test(%rip), %rsi
-	pushq	$32
+	pushq	$'1'
+	pushq	$'2'
+	pushq	$'3'
+	pushq	$'4'
 	call	printf_
 	EXIT_	%rax
 
 
 # arguments:	fd (edi) ; fmt (rsi) ; arguments (pushed into the stack)
 # return:	number of bytes written.
-# regs:		rax, rdi, rsi, %rcx
+# regs:		rax, rdi, rsi, rcx, rbx
 printf_:
 	pushq	%rbp
 	movq	%rsp, %rbp
@@ -86,20 +89,32 @@ printf_:
 	#                    ` now here not at %.
 	incq	-20(%rbp)
 	movzbl	1(%rax), %eax
+	# may this is not a format.
+	cmpb	$'%', %al
+	je	.printf_fmt_skip
+	# getting the valye for this format; stored into rbx.
+	movq	-8(%rbp), %rbx
+	movq	16(%rbp, %rbx, 8), %rbx
+	incq	-8(%rbp)
+	# -*-
 	cmpb	$'d', %al
 	je	.printf_fmt_number
 	cmpb	$'s', %al
 	je	.printf_fmt_string
 	cmpb	$'c', %al
 	je	.printf_fmt_character
-	cmpb	$'%', %al
-	je	.printf_fmt_skip
 	jmp	.printf_err_unknown_fmt
 
 .printf_fmt_number:
-.printf_fmt_string:
-.printf_fmt_character:
 
+.printf_fmt_string:
+
+.printf_fmt_character:
+	movq	-28(%rbp), %rax
+	movb	%bl, (%rax)
+	incq	-28(%rbp)
+	incq	-36(%rbp)
+	jmp	.printf_fmt_done
 .printf_fmt_skip:
 	movq	-28(%rbp), %rax
 	movb	$'%', (%rax)
@@ -109,7 +124,6 @@ printf_:
 .printf_fmt_done:
 	incq	-20(%rbp)
 	jmp	.printf_loop
-
 .printf_goodbye:
 	leaq	.buffer(%rip), %rsi
 	movq	-36(%rbp), %rdx
