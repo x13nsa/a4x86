@@ -1,5 +1,6 @@
 #objs = types.o tester.o strlen.o strncmp.o memset.o printf.o
 objs = printf.o
+#objs = a.o
 
 exec = a4x86
 

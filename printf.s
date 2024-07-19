@@ -13,7 +13,7 @@
 	.numbuf_cap:	.quad	32
 
 	.laradio:	.string "la radio!"
-	.test:		.string "hola como estas %d subeme la radio\n"
+	.test:		.string "hola como estas %d subeme la radio %d%c"
 
 .section	.text
 .globl		printf_
@@ -41,9 +41,11 @@
 .endm
 
 _start:
-	movl	$1, %edi
+	movl	$3634, %edi
 	leaq	.test(%rip), %rsi
-	pushq	$12
+	pushq	$10
+	pushq	$69
+	pushq	$9345
 	call	printf_
 	EXIT_	%rax
 
@@ -135,22 +137,14 @@ printf_:
 .printf_fmt_num_get:
 	testq	%rax, %rax
 	jz	.printf_fmt_num_end
-
 	movq	$10, %rbx
+	cdq
 	divq	%rbx
 	addq	$'0', %rdx	
 	movb	%dl, (%rsi)
 	decq	%rsi
 	jmp	.printf_fmt_num_get
-
 .printf_fmt_num_end:
-	#movq	$1, %rax
-	#movq	$1, %rdi
-	#leaq	.numbuf(%rip), %rsi
-	#movq	.numbuf_cap(%rip), %rdx
-	#syscall
-	EXIT_	$4
-
 	incq	%rsi
 	movq	%rsi, %rbx
 
@@ -207,7 +201,6 @@ printf_:
 .printf_err_unknown_fmt:
 	ERROR_	.err_unknw_fmt_msg(%rip), .err_unknw_fmt_len(%rip)
 	EXIT_	$1
-
 .printf_err_overflow:
 	ERROR_	.err_overflow_msg(%rip), .err_overflow_len(%rip)
 	EXIT_	$1
