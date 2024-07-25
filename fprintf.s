@@ -53,7 +53,7 @@
 
 	.err_overflow_msg:	.string "fprintf_: fmt overflow.\n"
 	.err_overflow_len:	.long	23
-	
+
 	.tester:		.string "neg: %d %d %d %d\n"
 
 	.buffer_cap:	.quad	2048
@@ -184,7 +184,7 @@ fprintf_:
 	movq	$10, %rbx
 	cdq
 	divq	%rbx
-	addq	$'0', %rdx	
+	addq	$'0', %rdx
 	movb	%dl, (%rsi)
 	decq	%rsi
 	jmp	.fprintf_fmt_num_get
